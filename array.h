@@ -1,12 +1,14 @@
 #ifndef _ARRAY_H_
 #define _ARRAY_H_
 #define INITIAL_SIZE 10000
+#define BUCKET_SIZE 20
 
 #include <stdlib.h>
+#include <math.h>
 
 typedef struct array {
-  void **_data;
-  size_t _size, _total_size;
+  void ***_buckets;
+  size_t _size, _total_size, _total_buckets_size, _bucket_size;
 } array;
 
 typedef void (*array_fn_print)(void *);

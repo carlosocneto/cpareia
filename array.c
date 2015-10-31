@@ -13,20 +13,42 @@ array_new_prealloc(size_t size) {
 
   ary->_size = 0;
   ary->_total_size = size;
-  ary->_data = malloc(sizeof(void *) * size);
+  ary->_total_buckets_size = 1;
+  ary->_bucket_size = size;
+  ary->_buckets = malloc(sizeof(void **) * BUCKET_SIZE);
+  ary->_buckets[0] = malloc(sizeof(void *) * size);
 
   return ary;
 }
 
 void
 array_fini(array *ary) {
+  (void) ary;
+  /*
   ary->_data = realloc(ary->_data, sizeof(void *) * ary->_size);
   ary->_total_size = ary->_size;
+  */
+}
+
+inline size_t
+array_which_bucket(array *ary, size_t i) {
+  log2(1 + i / ary->_bucket_size);
+}
+
+inline void
+array_which_index(array *ary, size_t i) {
+  i - ary->_bucket_size * (pow(array_which_bucket(ary, i) - 1, 2) - 1);
 }
 
 void
 array_free(array *ary) {
-  free(ary->_data);
+  size_t i;
+
+  for(i = 0; i< ary->_total_buckets_size; i++) {
+    free(ary->_buckets[i]);
+  }
+
+  free(ary->_buckets);
   free(ary);
 }
 
