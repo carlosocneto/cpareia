@@ -14,8 +14,8 @@ main(int argc, char *argv[]) {
   pthread_t **comparator_threads;
   long max_threads;
 
-  if(argc != 2)
-    handle_error("Usage: cpareia XML\n");
+  if(argc != 3)
+    handle_error("Usage: cpareia XML -b(Start with a file of Blocking) or -f(To do the full work)\n");
 
   max_threads = sysconf(_SC_NPROCESSORS_ONLN);
 
@@ -26,17 +26,23 @@ main(int argc, char *argv[]) {
   printf("Começando leitura e blocagem\n");
   read_thread = database_read_async(project->d0);
 
-  blocking_threads = blocking_async(project, max_threads - 1);
+  if ( argv[3] == "-f") {
+    blocking_threads = blocking_async(project, max_threads - 1);
 
-  pthread_join(*read_thread, NULL);
-  printf("Continuando blocagem\n");
+    pthread_join(*read_thread, NULL);
+    printf("Continuando blocagem\n");
 
-  for(i = 0; i < max_threads - 1; i++) {
-    pthread_join(*blocking_threads[i], NULL);
-    free(blocking_threads[i]);
+    for(i = 0; i < max_threads - 1; i++) {
+      pthread_join(*blocking_threads[i], NULL);
+      free(blocking_threads[i]);
+    }
+    free(blocking_threads);
   }
 
-  free(blocking_threads);
+  if ( argv[3] == "-b") {
+    read_blocks(project, )
+  }
+
   free(read_thread);
   printf("Blocagem pronta\n\nComeçando comparação e escrita\n");
   comparator_threads = comparator_run_async(project, max_threads);
