@@ -19,6 +19,8 @@ project_print(project_t *project) {
 
   printf("Project: %s\n", project->name);
   printf("Task: %s\n", project->task);
+  printf("Blocks: %s\n", project->blockslist);
+
   for(i = 0; i < array_size(project->conjunctions); i++) {
     printf("Conjunction %d:\n", (int) i);
     conjunction_print(array_get(project->conjunctions, i));
@@ -220,12 +222,19 @@ project_parse_project(project_t *project, xmlXPathContextPtr ctx) {
 }
 
 void
+project_parse_blocking(project_t *project, xmlXPathContextPtr ctx) {
+  xmlXPathObjectPtr xpath;
+
+  xpath = xmlXPathEvalExpression(BAD_CAST "/blocking/blockslist", ctx);
+  project->blockslist = xmlGetProp(xpath->nodesetval->nodeTab[0], BAD_CAST "blockslist");
+}
+
+void
 project_parse_output(project_t *project, xmlXPathContextPtr ctx) {
   xmlXPathObjectPtr xpath;
   xmlChar *filename, *min, *max;
 
   xpath = xmlXPathEvalExpression(BAD_CAST "/project/output", ctx);
-
   filename = xmlGetProp(xpath->nodesetval->nodeTab[0], BAD_CAST "file");
   min = xmlGetProp(xpath->nodesetval->nodeTab[0], BAD_CAST "min");
   max = xmlGetProp(xpath->nodesetval->nodeTab[0], BAD_CAST "max");
@@ -234,8 +243,7 @@ project_parse_output(project_t *project, xmlXPathContextPtr ctx) {
   assert(min != NULL);
   assert(max != NULL);
 
-  project->output = output_new(
-      (char *) filename,
+  project->output = output_new((char *) filename,
       atof( (char *) min),
       atof( (char *) max));
 
@@ -306,6 +314,7 @@ project_parse(project_t *project, char *file_name) {
   project_parse_conjunctions(project, xpath_ctx);
   project_parse_classifier(project, xpath_ctx);
   project_parse_output(project, xpath_ctx);
+  project_parse_blocking(project,xpath_ctx);
 
   xmlXPathFreeContext(xpath_ctx);
   xmlFreeDoc(doc);

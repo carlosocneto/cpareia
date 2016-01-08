@@ -1,5 +1,6 @@
 #include "blocking.h"
 
+
 void
 blocking_thread_params_free(blocking_thread_params_t *params) {
   free(params);
@@ -81,6 +82,55 @@ blocking_async(project_t *project, int num_threads) {
 
   return threads;
 }
+
+void 
+read_block(project_t *project) {
+
+  char *path;
+  path = project->blockslist;
+
+  //project->blockslist;
+  //open and get the file handle
+  FILE * fh;
+  fh = fopen(path, "r");
+
+  //check if file exists
+  if (fh == NULL){
+    printf("File does not exists %s", path);
+    return;
+  }
+
+  //read line by line
+  const size_t line_size = 300;
+  
+  char* line = malloc(line_size);
+  char *k;
+  char *p;
+  char *key;
+    
+  while (fgets(line, line_size, fh) != NULL)  {
+    p = strtok(line, ":");
+    key = p;
+
+    p = strtok(NULL, ":");
+    int total = atoi(p);
+
+    p = strtok(NULL, ":");
+
+    for (int i=0;i<total;i++) { 
+      k = strtok(p, " ");
+      while( k != NULL ) {
+          int id = atoi(k+1);
+          record_t *record = array_get(project->d0->records, id);
+          hash_insert(project->blocks, key, record);
+          k = strtok(NULL, " ");
+      }
+    }
+  }
+
+  free(line);   
+}
+
 
 void
 blocking_print(project_t *project) {

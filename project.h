@@ -20,14 +20,18 @@ typedef struct project_t {
   hash_t *blocks;
   classifier_t *classifier;
   output_t *output;
+  unsigned char *blockslist;
   float blocks_mean_size;
   array_t *works;
 } project_t;
+
 
 project_t *project_new();
 void project_print(project_t *);
 void project_free(project_t *);
 void project_parse(project_t *, char *);
 int project_get_field_id(project_t *, char*);
+
+
 
 #endif

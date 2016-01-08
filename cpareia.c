@@ -17,6 +17,10 @@ main(int argc, char *argv[]) {
   if(argc != 3)
     handle_error("Usage: cpareia XML -b(Start with a file of Blocking) or -f(To do the full work)\n");
 
+  if(strcmp( argv[3], "-f") != 0 || strcmp( argv[3], "-b") != 0) {
+    handle_error("Third parameter shoudb -f or -b");
+  }
+
   max_threads = sysconf(_SC_NPROCESSORS_ONLN);
 
   project = project_new();
@@ -26,7 +30,7 @@ main(int argc, char *argv[]) {
   printf("Começando leitura e blocagem\n");
   read_thread = database_read_async(project->d0);
 
-  if ( argv[3] == "-f") {
+  if ( strcmp( argv[3], "-f") == 0) {
     blocking_threads = blocking_async(project, max_threads - 1);
 
     pthread_join(*read_thread, NULL);
@@ -39,11 +43,12 @@ main(int argc, char *argv[]) {
     free(blocking_threads);
   }
 
-  if ( argv[3] == "-b") {
-    read_blocks(project, )
+  free(read_thread);
+
+  if ( strcmp( argv[3], "-b") == 0) {
+    read_blocks(project);
   }
 
-  free(read_thread);
   printf("Blocagem pronta\n\nComeçando comparação e escrita\n");
   comparator_threads = comparator_run_async(project, max_threads);
 

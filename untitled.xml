@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="Bases_sus" task="deduplication" version="2.0" tmp-dir="/tmp">
+        <data-sources>
+        <data-source id="0" file="/home/ccates/projetos/datasus/dados/tb_dados_pacientes_final_datasus_head.csv" type="delimited" field-separator="\t">
+                <fields>
+                        <field name="id" type="int"/>
+                        <field name="nomecompleto" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_paciente" default-weight="14.2732"/>
+                        <field name="nomep" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_paciente_p" default-weight="14.2847"/>
+                        <field name="nomem" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_paciente_m" default-weight="14.2871"/>
+                        <field name="nomeu" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_paciente_u" default-weight="14.2877"/>
+                        <field name="nomemae" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_mae" default-weight="14.2855"/>
+                        <field name="nomemaep" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_mae_p" default-weight="14.2862"/>
+                        <field name="nomemaem" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_mae_m" default-weight="14.2876"/>
+                        <field name="nomemaeu" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_nome_mae_u" default-weight="14.2843"/>
+                        <field name="sexo" type="string"/>
+                        <field name="data" type="string"/>
+                        <field name="dia" type="string"/>
+                        <field name="mes" type="string"/>
+                        <field name="ano" type="string"/>
+                        <field name="cpf" type="string"/>
+                        <field name="cns" type="string"/>
+                        <field name="ufres" type="string"/>
+                        <field name="codmunicipio" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_cod_municipio_res" default-weight="14.2853"/>
+                        <field name="cep" type="string" weight-table="/home/ccates/projetos/datasus/dados/tb_freq_cep_res" default-weight="14.2877"/>
+                </fields>
+                </data-source>
+        </data-sources>
+  <!--
+        <deterministic-linkage>
+        <conjunction>
+                <field name="nomep" type="string"/>
+                <field name="nomem" type="string"/>
+                <field name="nomeu" type="string"/>
+                <field name="nomemaep" type="string"/>
+                <field name="nomemaem" type="string"/>
+                <field name="nomemaeu" type="string"/>
+                <field name="data" type="string"/>
+                <field name="cns" type="string"/>
+        </conjunction>
+        </deterministic-linkage>   
+-->
+
+        <!-- classic, sorting -->
+        <blocking type="classic">
+                <blockslist="/home/michel/teste/testeresultado.gz">
+<!--
+                <conjunction id="1">
+                                <part field-name="cpf"/>
+                </conjunction>
+
+                <conjunction id="2">
+                                <part field-name="cns"/>
+                </conjunction>
+-->
+                <conjunction id="3">
+                                <part field-name="nomep" transform="brsoundex"/>
+                                <part field-name="nomeu" transform="brsoundex"/>                                
+                                <part field-name="data"/>
+                                <part field-name="sexo"/>
+                        </conjunction>
+<!--
+                <conjunction id="4">
+                                <part field-name="nomemaep" transform="brsoundex"/>
+                                <part field-name="nomemaeu" transform="brsoundex"/>
+                                <part field-name="data"/>
+                </conjunction>
+                
+                <conjunction id="5">
+                                <part field-name="codmunicipio"/>
+                                <part field-name="data"/>
+                                <part field-name="sexo"/>
+                </conjunction>
+-->
+
+        </blocking>
+
+        <classifier type="basic" apply-transitivity="simple" match-min-result="31" not-match-max-result="20">
+                <approx-string-comparator use-weight-table="true" m="0.9607" u="0.0861" missing="-0.5301" field1="nomecompleto" field2="nomecompleto" frequency-table="tb_freq_nome_paciente" function="winkler" minValueToBeMatch="0.95"/>
+                <approx-string-comparator use-weight-table="true" m="0.9953" u="0.9800" missing="-1.0365" field1="nomep" field2="nomep" frequency-table="tb_freq_nome_paciente_p" function="winkler" minValueToBeMatch="0.90"/>
+                <approx-string-comparator use-weight-table="true" m="0.9879" u="0.9823" missing="-0.2711" field1="nomem" field2="nomem" frequency-table="tb_freq_nome_paciente_m" function="winkler" minValueToBeMatch="0.90"/>
+                <approx-string-comparator use-weight-table="true" m="0.9840" u="0.9823" missing="-0.0722" field1="nomeu" field2="nomeu" frequency-table="tb_freq_nome_paciente_u" function="winkler" minValueToBeMatch="0.90"/>
+
+                <approx-string-comparator use-weight-table="true" m="0.8171" u="0.0491" missing="0.8396" field1="nomemae" field2="nomemae" frequency-table="tb_freq_nome_mae" function="winkler" minValueToBeMatch="0.95"/>
+                <approx-string-comparator use-weight-table="true" m="0.9757" u="0.4273" missing="-1.6848" field1="nomemaep" field2="nomemaep" frequency-table="tb_freq_nome_mae_p" function="winkler" minValueToBeMatch="0.90"/>
+                <approx-string-comparator use-weight-table="true" m="0.9185" u="0.7120" missing="-0.7272" field1="nomemaem" field2="nomemaem" frequency-table="tb_freq_nome_mae_m" function="winkler" minValueToBeMatch="0.90"/>
+                <approx-string-comparator use-weight-table="true" m="0.9359" u="0.7120" missing="-0.8868" field1="nomemaeu" field2="nomemaeu" frequency-table="tb_freq_nome_mae_u" function="winkler" minValueToBeMatch="0.90"/>
+
+                <exact-string-comparator m="0.9961" u="0.9940" missing="-0.3185" field1="sexo" field2="sexo"/>
+
+                <exact-string-comparator m="0.9503" u="0.0584" missing="-0.1102" field1="data" field2="data"/>
+                <exact-string-comparator m="0.9736" u="0.1170" missing="-1.0059" field1="dia" field2="dia"/>
+                <exact-string-comparator m="0.9785" u="0.2200" missing="-1.5161" field1="mes" field2="mes"/>
+                <exact-string-comparator m="0.9890" u="0.9989" missing="1.6234" field1="ano" field2="ano"/>
+
+                <exact-string-comparator m="0.9984" u="0.0048" missing="-0.7937" field1="cpf" field2="cpf"/>
+
+                <exact-string-comparator m="0.9655" u="0.0104" missing="0.8470" field1="cns" field2="cns"/>
+                                                                                                             
+                <br-city-comparator m="0.8797" u="0.3785" mState="0.8797" uState="0.3785" missing="-0.5765" use-weight-table="true" frequency-table="tb_freq_cod_municipio_res" field1="codmunicipio" field2="codmunicipio"/>
+
+                <exact-string-comparator use-weight-table="true" m="0.5774" u="0.9747" missing="1.6535" field1="cep" field2="cep" frequency--table="tb_freq_cep_res"/>
+
+        </classifier>
+
+        <cache type="record" size="2" intra-readers="1" policy="lru"/>
+        <output histogram="/home/michel/teste/1_histogram1.dat" 
+                        deterministic="/home/michel/teste/1_deterministico1.gz" min="-4" max="200" format="pair" 
+                        file="/home/michel/teste/testeresultado.gz"
+                        candidates="/home/michel/teste/testecandidatos.gz"/>
+</project>
