@@ -83,52 +83,47 @@ blocking_async(project_t *project, int num_threads) {
   return threads;
 }
 
-void 
-read_block(project_t *project) {
-
-  char *path;
-  path = project->blockslist;
-
-  //project->blockslist;
-  //open and get the file handle
+void
+blocking_read_blocks(project_t *project) {
+  char* line, *k, *p, *key, *path;
   FILE * fh;
+  int i, id, total;
+  record_t *record;
+  const size_t line_size = 300;
+
+  /*project->blockslist;
+  open and get the file handle */
+  path = (char *)project->blockslist;
   fh = fopen(path, "r");
 
-  //check if file exists
-  if (fh == NULL){
-    printf("File does not exists %s", path);
-    return;
+  /*check if file exists*/
+  if (!fh){
+    handle_error("File does not exists %s", path);
   }
 
-  //read line by line
-  const size_t line_size = 300;
-  
-  char* line = malloc(line_size);
-  char *k;
-  char *p;
-  char *key;
-    
-  while (fgets(line, line_size, fh) != NULL)  {
+  line = malloc(sizeof(char) * line_size);
+
+  while (fgets(line, line_size, fh))  {
     p = strtok(line, ":");
     key = p;
 
     p = strtok(NULL, ":");
-    int total = atoi(p);
+    total = atoi(p);
 
     p = strtok(NULL, ":");
 
-    for (int i=0;i<total;i++) { 
+    for (i = 0; i < total; i++) {
       k = strtok(p, " ");
-      while( k != NULL ) {
-          int id = atoi(k+1);
-          record_t *record = array_get(project->d0->records, id);
+      while(k) {
+          id = atoi(k+1);
+          record = array_get(project->d0->records, id);
           hash_insert(project->blocks, key, record);
           k = strtok(NULL, " ");
       }
     }
   }
 
-  free(line);   
+  free(line);
 }
 
 
