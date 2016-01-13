@@ -5,48 +5,53 @@ hash_new() {
   hash_t *hash;
 
   hash = malloc(sizeof(hash_t));
-  hash->table = g_hash_table_new_full(
-      g_str_hash,
-      g_str_equal,
-      (GDestroyNotify) free,
-      (GDestroyNotify) array_free);
 
-#ifndef SINGLE_BLOCKER
+  hash->table = kh_init(str);
+
   pthread_mutex_init(&hash->mutex, NULL);
-#endif
 
   return hash;
 }
 
+int
+hash_internal_free(const char *key, array_t *array, void *data) {
+  (void) key;
+  (void) array;
+  (void) data;
+  return 1;
+}
+
 void
 hash_free(hash_t *hash) {
-  g_hash_table_destroy(hash->table);
+  hash_foreach_remove(hash, hash_internal_free, NULL);
 
-#ifndef SINGLE_BLOCKER
-  pthread_mutex_destroy(&hash->mutex);
-#endif
+  kh_destroy(str, hash->table);
 
   free(hash);
 }
 
 void
 hash_insert(hash_t *hash, char *key, void *record) {
+  int absent;
   array_t *array;
+  khint_t k;
 
-#ifndef SINGLE_BLOCKER
   pthread_mutex_lock(&hash->mutex);
-#endif
 
-  if(!(array = g_hash_table_lookup(hash->table, key))) {
-    array = array_new(1);
-    g_hash_table_insert(hash->table, strdup(key), array);
+  k = kh_put(str, hash->table, key, &absent);
+
+  if(absent) {
+    kh_key(hash->table, k) = strdup(key);
+    kh_value(hash->table, k) = array_new(1);
   }
+
+  k = kh_get(str, hash->table, key);
+
+  array = kh_val(hash->table, k);
 
   array_append(array, record);
 
-#ifndef SINGLE_BLOCKER
   pthread_mutex_unlock(&hash->mutex);
-#endif
 }
 
 void
@@ -54,26 +59,56 @@ record_void_print(void *record) {
   record_print(record);
 }
 
+array_t *
+hash_get(hash_t *hash, char *key) {
+  khint_t k;
+
+  k = kh_get(str, hash->table, key);
+  return kh_val(hash->table, k);
+}
+
 void
-hash_print_pair(gpointer key, gpointer value, gpointer data) {
+hash_print_pair(const char *key, array_t *array, void *data) {
   (void) data;
-  printf("  %s =>\n",(gchar *) key);
-  array_print(value, record_void_print);
+  printf("  %s =>\n", key);
+  array_print(array, record_void_print);
 }
 
 void
-hash_foreach_remove(hash_t *hash, GHRFunc fn, void *data) {
-  g_hash_table_foreach_remove(hash->table, fn, data);
+hash_internal_remove(hash_t *hash, const char *key, array_t *array) {
+  khint_t k;
+
+  k = kh_get(str, hash->table, key);
+  kh_del(str, hash->table, k);
+  free((char *) key);
+  array_free(array);
 }
 
 void
-hash_foreach(hash_t *hash, GHFunc fn, void *data) {
-  g_hash_table_foreach(hash->table, fn, data);
+hash_foreach_remove(hash_t *hash, hash_foreach_rm_fn fn, void *data) {
+  array_t *array;
+  const char *key;
+
+  kh_foreach(
+      hash->table,
+      key,
+      array,
+      if(fn(key, array, data))
+      hash_internal_remove(hash, key, array)
+      );
+}
+
+void
+hash_foreach(hash_t *hash, hash_foreach_fn fn, void *data) {
+  array_t *array;
+  const char *key;
+
+  kh_foreach(hash->table, key, array, fn(key, array, data));
 }
 
 size_t
 hash_size(hash_t *hash) {
-  return g_hash_table_size(hash->table);
+  return kh_size(hash->table);
 }
 
 void

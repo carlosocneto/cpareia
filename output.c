@@ -1,32 +1,44 @@
 #include "output.h"
 
-FILE *
+gzFile
 output_get_file(output_t *output, int file) {
   return output->files[file];
 }
 
 void
-output_write(result_t *result, FILE *file) {
+output_write(
+    output_t *output,
+    char *id1,
+    char *id2,
+    char status,
+    double score,
+    double *scores,
+    int num_scores,
+    int file_id) {
   int i;
+  gzFile file;
 
-  fprintf(
-      file,
-      "%c %c %s %s %f",
-      result->status,
-      'X', result->id1,
-      result->id2,
-      result->score);
-
-  for(i = 0; i < result->num_scores; i++) {
-    fprintf(file, " %f", result->scores[i]);
+  if(score < output->min || score > output->max) {
+    return;
   }
-  fprintf(file, "\n");
 
-  result_free(result);
+  file = output_get_file(output, file_id);
+  
+  if(output->no_print == 1) {
+    output->stats->total++ ;
+    printf("Total: %d\n",output->stats->total);
+  }
+
+  gzprintf(file, "%c %c %s %s %f", status, 'X', id1, id2, score);
+  
+  for(i = 0; i < num_scores; i++) {
+    gzprintf(file, " %f", scores[i]);
+  }
+  gzprintf(file, "\n");
 }
 
 output_t *
-output_new(char *filename, double min, double max) {
+output_new(char *filename, double min, double max, int no_print, stats_t *stats) {
   output_t *output;
 
   output = malloc(sizeof(output_t));
@@ -34,6 +46,10 @@ output_new(char *filename, double min, double max) {
   output->filename = filename;
   output->min = min;
   output->max = max;
+  output->files = NULL;
+  output->num_files = 0;
+  output->no_print = no_print;
+  output->stats = stats;
 
   return output;
 }
@@ -49,12 +65,12 @@ output_open_files(output_t *output, int num_files) {
   name = malloc(sizeof(char) * (size + 10));
 
   output->num_files = num_files;
-  output->files = malloc(sizeof(FILE *) * num_files);
+  output->files = malloc(sizeof(gzFile) * num_files);
 
   for(i = 0; i < num_files; i++) {
-    sprintf(name, "%s%d", output->filename, i);
+    sprintf(name, "%s%d.gz", output->filename, i);
 
-    if(!(output->files[i] = fopen(name, "w"))) {
+    if(!(output->files[i] = gzopen(name, "wb"))) {
       handle_error("Erro ao abrir arquivo %s\n", name);
     }
   }
@@ -75,7 +91,7 @@ output_free(output_t *output) {
   int i;
 
   for(i = 0; i < output->num_files; i++) {
-    fclose(output->files[i]);
+    gzclose(output->files[i]);
   }
   free(output->files);
 

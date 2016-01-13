@@ -8,7 +8,7 @@ open_file(char *fname, char **buf) {
 	fd = open(fname, O_RDONLY);
 
 	if (fd == -1)
-		handle_error("open");
+		handle_error("CSV File not founded");
 
   if (fstat(fd, &fs) == -1)
     handle_error("fstat");
