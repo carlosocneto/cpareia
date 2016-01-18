@@ -92,6 +92,7 @@ void
 compare_block(work_t *work, project_t *project, int id) {
   size_t i, j, size, classes;
   record_t *r1, *r2;
+  size_t id1, id2;
   double *scores;
   double score;
   char status;
@@ -102,8 +103,16 @@ compare_block(work_t *work, project_t *project, int id) {
 
   for(i = work->start; i < size - 1; i += work->step) {
     r1 = array_get(work->array, i);
+    id1 = atol(record_get_field(r1, 0));
+
     for(j = i + 1; j < size; j++) {
       r2 = array_get(work->array, j);
+      id2 = atol(record_get_field(r2, 0));
+
+      if(cache_has_pair(project->cache, id1, id2)) {
+        continue;
+      }
+
       score = compare_all(project->classifier, r1, r2, scores);
 
       if(score < project->output->min) {
@@ -230,6 +239,8 @@ comparator_run_async(project_t *project) {
   printf("Começando comparação em si\n");
 
   output_open_files(project->output, project->args->max_threads);
+
+  project->cache = cache_new(10000000, 10000000);
 
   for(i = 0; i < project->args->max_threads; i++) {
     threads[i] = malloc(sizeof(pthread_t));

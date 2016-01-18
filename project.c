@@ -57,6 +57,7 @@ project_free(project_t *project) {
   array_free(project->conjunctions);
   classifier_free(project->classifier);
   args_free(project->args);
+  cache_free(project->cache);
   free(project);
 }
 

@@ -12,6 +12,7 @@
 #include "hash.h"
 #include "output.h"
 #include "args.h"
+#include "cache.h"
 
 typedef struct project_t {
   unsigned char *name;
@@ -24,6 +25,7 @@ typedef struct project_t {
   float blocks_mean_size;
   array_t *works;
   args_t *args;
+  cache_t *cache;
 } project_t;
 
 project_t *project_new();
